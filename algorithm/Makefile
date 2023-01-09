@@ -5,7 +5,7 @@
 CC = gcc
 CXX = g++
 LIBS = 
-CFLAGS = --std=c++11 -W -Wall -Wno-sign-compare -O3 -s -pipe -mmmx -msse -msse2 -msse3 # -mcmodel=medium
+CFLAGS = --std=c++17 -W -Wall -Wno-sign-compare -O3 -s -pipe -mmmx -msse -msse2 -msse3 -g # -mcmodel=medium
 MEM = -D WATCH_MEM
 
 all: fesif chst

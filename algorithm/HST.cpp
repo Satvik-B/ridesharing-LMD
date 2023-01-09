@@ -5,29 +5,32 @@
 
 #include "HST.h"
 #include "global.h"
+#include<bits/stdc++.h>  
 
 const int MAX_NODE = 100007;
 const int MAX_HEIGHT = 21;
 const int MAX_SAMPLE = 100;
 
 int nV = 0, H = 0;
-location_t* V = NULL;
-int *pi = NULL;
+vector<Coordinate> V;
+vector<int> pi;
 int *reverse_pi = NULL;
 int **far = NULL;
 double dmax = -1.0;
 double gama = -1.0;
 double *exp2s = NULL;
 double *sum2s = NULL;
-static int* pi_bk = NULL;
+static vector<int> pi_bk;
 static double gamma_bk = -1.0;
+std::random_device rd;
+std::mt19937 g(rd());
 
 
 void initMemory(int n) {
 	nV = n;
-	V = new location_t[nV];
-	pi = new int[nV];
-	pi_bk = new int[nV];
+	V.resize(nV);
+	pi.resize(nV);
+	pi_bk.resize(nV);
 	reverse_pi = new int[nV];
 	far = new int*[nV];
 	for (int i=0; i<nV; ++i)
@@ -44,15 +47,14 @@ void initMemory(int n) {
 }
 
 void freeMemory() {
-	delete[] V;
-	delete[] pi;
+	// delete[] V;
+	// delete[] pi;
 	delete[] reverse_pi;
 	for (int i=0; i<nV; ++i)
 		delete[] far[i];
 	delete[] far;
 	delete[] exp2s;
 	delete[] sum2s;
-	delete[] pi_bk;
 }
 
 void initLocation(string &fileName) {
@@ -66,8 +68,8 @@ void initLocation(string &fileName) {
 	fin >> nV;
 	initMemory(nV);
     for (int i=0; i<nV; ++i) {
-        fin >> V[i].x;
-        fin >> V[i].y;
+        fin >> V[i].longitude;
+        fin >> V[i].latitude;
     }
     fin.close();
 }
@@ -96,7 +98,7 @@ void randomization() {
 	for (int i=0; i<nV; ++i){
 		pi[i] = i;
 	}
-	random_shuffle(pi, pi+nV);
+	std::shuffle(pi.begin(), pi.end(), g);
 	for (int i=0; i<nV; ++i){
 		reverse_pi[pi[i]] = i;
 	}
@@ -197,12 +199,12 @@ void readHST(string& fileName, bool flag) {
 
 void backupHST() {
 	gamma_bk = gama;
-	memcpy(pi_bk, pi, sizeof(int)*nV);
+	pi_bk = pi;
 }
 
 void loadHST() {
 	gama = gamma_bk;
-	memcpy(pi, pi_bk, sizeof(int)*nV);
+	pi_bk = pi;
 	for (int i=0; i<nV; ++i){
 		reverse_pi[pi[i]] = i;
 	}

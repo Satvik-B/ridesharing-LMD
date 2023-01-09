@@ -237,12 +237,12 @@ void readFromFiles(string locFileName, string hstFileName, string inputFileName)
 	inputFile >> nW >> nR;
 	initGlobalMemory(nV, nW, nR);
 	
-	for(int i=0; i<nV; i++) {
-		locFile >> V[i].x >> V[i].y;
-	}
-	for (int i=0; i<nW; ++i) {
-		inputFile >> workers[i].oid >> workers[i].cap; 
-	}
+	// for(int i=0; i<nV; i++) {
+	// 	locFile >> V[i].x >> V[i].y;
+	// }
+	// for (int i=0; i<nW; ++i) {
+	// 	inputFile >> workers[i].oid >> workers[i].cap; 
+	// }
 	for (int j=0; j<nR; ++j) {
 		inputFile >> requests[j].oid >> requests[j].did >> requests[j].wei;
 	}	
@@ -358,23 +358,36 @@ void insertDist(worker_t& w, int rid, int& oPos, int& dPos, double& inc) {
 	request_t& r = R[rid];
 	vector<int>& S = w.S;
 	vector<double> picked;
+	vector<double> pickedVolume;
+	vector<int> pickedCount;
 	
 	picked.push_back(0.0);
+	pickedVolume.push_back(0.0);
+	pickedCount.push_back(0);
 	for (int i=1; i<S.size(); ++i) { 
 		double carry = *picked.rbegin();
+		double carryVolume = *pickedVolume.rbegin();
+		int carryCount = *pickedCount.rbegin();
 		if (S[i] & 1) {
 			carry -= R[S[i]>>1].wei;
+			carryVolume -= R[S[i]>>1].volume;
+			carryCount--;
+
 		} else {
 			carry += R[S[i]>>1].wei;
+			carryVolume += R[S[i]>>1].volume;
+			carryCount++;
 		}
         picked.push_back(carry);
+		pickedVolume.push_back(carryVolume);
+		pickedCount.push_back(carryCount);
     }
 	
 	double tmp;
 	inc = INF, oPos = dPos = -1;
 	
 	for (int i=0; i<S.size(); ++i) { 
-		if (picked[i]+r.wei > w.cap)
+		if (picked[i]+r.wei > w.cap.capacity || pickedVolume[i]+r.volume > w.cap.getVolume() || pickedCount[i]+1 > 24)
 			continue;
 		
 		if (i == S.size()-1) {
@@ -399,7 +412,7 @@ void insertDist(worker_t& w, int rid, int& oPos, int& dPos, double& inc) {
 	vector<int> Plc;
 
 	for (int j=0; j<S.size(); ++j) {
-		if (picked[j]+r.wei > w.cap) {
+		if (picked[j]+r.wei > w.cap.capacity || pickedVolume[j]+r.volume > w.cap.getVolume() || pickedCount[j]+1 > 24) {
 			Dio.push_back(INF);
 			Plc.push_back(-1);
 			continue;

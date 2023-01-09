@@ -20,14 +20,14 @@ int dcmp(double x) {
 	return x>0 ? 1:-1;
 }
 
-double dist(location_t *V, int x, int y) { 
-	location_t& a = V[x];
-	location_t& b = V[y];
-	return sqrt(1.0*(a.x - b.x)*(a.x - b.x) + 1.0*(a.y - b.y)*(a.y - b.y));
+double dist(vector<Coordinate>& V, int x, int y) { 
+	Coordinate& a = V[x];
+	Coordinate& b = V[y];
+	return sqrt(1.0*(a.longitude - b.longitude)*(a.longitude - b.longitude) + 1.0*(a.latitude - b.latitude)*(a.latitude - b.latitude));
 } 
 
-double dist(location_t &a, location_t &b) {
-	return sqrt(1.0*(a.x - b.x)*(a.x - b.x) + 1.0*(a.y - b.y)*(a.y - b.y));
+double dist(Coordinate &a, Coordinate &b) {
+	return sqrt(1.0*(a.longitude - b.longitude)*(a.longitude - b.longitude) + 1.0*(a.latitude - b.latitude)*(a.latitude - b.latitude));
 }
 
 void freeInput() {
