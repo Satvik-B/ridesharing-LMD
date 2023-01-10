@@ -3,21 +3,11 @@
 	\Date:		2019/05/22
 	\Note: 		A fast implementation of my draft for VLDB'20.
 **/
-#include <bits/stdc++.h>
-#include "global.h"
-#include "HST.h"
-#include "utils.h"
+#include "fesif.h"
+
 using namespace std; 
 
-#ifdef WATCH_MEM
-#include "monitor.h"
-#endif
 
-int nP = 0;
-int* reqPool;
-int* reqPos;
-const double step = 2.0;
-double rho = 1, delta = rho;
 
 void localInit() {
 	delta = rho;
@@ -36,21 +26,24 @@ void localFree() {
 	delete[] reqPool;
 }
 
-vector<vector<int> > createResult();
-void wrapper(vector<item> items, Coordinate warehouse, int numberOfRiders, Bin bin);
-
 void budget(int wid, vector<int>& Rw, vector<int>& Sw, double delta) {
+	// cout<<delta<<endl;
 	worker_t& w = workers[wid];
 	Rw.clear();
 	Sw.clear();	
 	vector<int> sorted;
-	
+	// for(int i=0;i<nP;i++) cout<<reqPool[i]<<" ";
+	// cout<<endl;
 	for (int i=0; i<nP; ++i) {
+		// cout<<i<<" "<<"Hey there"<<endl;
 		request_t& r = requests[reqPool[i]];
+		// cout<<localDist(w.oid, r.oid)<<" "<<localDist(r.oid, r.did)<<endl;
 		if (localDist(w.oid, r.oid)+localDist(r.oid, r.did) > delta)
 			continue;
 		sorted.push_back(reqPool[i]);
 	}
+	// for(int i=0;i<sorted.size();i++) cout<<sorted[i]<<" ";
+	// cout<<endl;
 	if (sorted.empty()) return ;
 	
  	genLabel(w, H);
@@ -80,13 +73,14 @@ void budget(int wid, vector<int>& Rw, vector<int>& Sw, double delta) {
 void updateRoute(int wid, vector<int>& Rw, vector<int>& Sw) {
 	worker_t& w = workers[wid];
 	w.S.insert(w.S.end(), Sw.begin()+1, Sw.end());
-	
+	// cout<<Rw.size()<<" "<<Sw.size()<<" "<<nP<<endl;
 	for (int i=0; i<Rw.size(); ++i) {
 		int rid = Rw[i], pos = reqPos[rid];
 		swap(reqPool[pos], reqPool[nP-1]);
 		reqPos[reqPool[pos]] = pos;
 		--nP;
 	}
+	// cout<<"Route Updated"<<endl;
 }
 
 vector<int> getRequest(int wid) {
@@ -116,6 +110,7 @@ void FESI() {
 		vpi[i].second = i;
 	}
 	while (assigned < nR) {
+		// cout<<"Starting new loop."<<endl;
 		for (int i=0; i<nW; ++i) {
 			int j = vpi[i].second;
 			budget(j, Rw, Sw, delta);
@@ -134,10 +129,6 @@ void FESI() {
 		}
 		sort(vpi.begin(), vpi.end());
 	}
-	
-#ifdef WATCH_MEM
-	watchSolutionOnce(getpid(), usedMemory);
-#endif
 }
 
 int main(int argc, char** argv) {
@@ -147,7 +138,7 @@ int main(int argc, char** argv) {
 	input>>warehouse.longitude>>warehouse.latitude;
 	Bin bin;
 	input>>bin.size.length>>bin.size.width>>bin.size.height;
-	bin.capacity = 100;
+	bin.capacity = 25;
 	int n;
 	input>>n;
 	vector<item> items(n);
@@ -157,18 +148,24 @@ int main(int argc, char** argv) {
 		items[i].weight = 1;
 	}
 
-	wrapper(items, warehouse, 1, bin);
+	wrapperLMD(items, warehouse, 100, bin);
 	freeGlobalMemory();
 	localFree();
 	
 	return 0;
 }
 
-void wrapper(vector<item> items, Coordinate warehouse, int numberOfRiders, Bin bin) {
+void wrapperLMD(vector<item>& items, Coordinate warehouse, int numberOfRiders, Bin bin) {
 	set<Coordinate> all_coordinates;
+	double scale = 1e4;
 	for(auto item : items) {
-		all_coordinates.insert(item.coordinate);
+		Coordinate temp = item.coordinate;
+		temp.latitude*=scale;
+		temp.longitude*=scale;
+		all_coordinates.insert(temp);
 	}
+	warehouse.latitude*=scale;
+	warehouse.longitude*=scale;
 	all_coordinates.insert(warehouse);
 	
 	
@@ -188,12 +185,16 @@ void wrapper(vector<item> items, Coordinate warehouse, int numberOfRiders, Bin b
 		workers[i].oid = warehouse_id;
 		workers[i].cap = bin;
 	}
-
+	vector<pair<item, int> > sorted_items(items.size());
+	for(int i=0;i<items.size();i++) sorted_items[i] = make_pair(items[i], i);
+	sort(sorted_items.begin(), sorted_items.end(), [](pair<item, int> a, pair<item, int> b) {
+		return a.first.coordinate < b.first.coordinate;
+	});
 	for(int i=0;i<nR;i++) {
-		requests[i].did = lower_bound(V.begin(), V.end(), items[i].coordinate) - V.begin();
+		requests[i].did = lower_bound(V.begin(), V.end(), sorted_items[i].first.coordinate) - V.begin();
 		requests[i].oid = warehouse_id;
-		requests[i].wei = items[i].weight;
-		requests[i].volume = items[i].size.height*items[i].size.width*items[i].size.length;
+		requests[i].wei = sorted_items[i].first.weight;
+		requests[i].volume = sorted_items[i].first.size.height*sorted_items[i].first.size.width*sorted_items[i].first.size.length;
 	}
 
 
@@ -213,11 +214,11 @@ void wrapper(vector<item> items, Coordinate warehouse, int numberOfRiders, Bin b
 
 	FESI();
 
-	vector<vector<int> > clusterId = createResult();
+	vector<vector<int> > cluster = createResult();
 
 	vector<int> clusterCount(nR);
-	for(int i=0;i<clusterId.size();i++) {
-		for(int j=0;j<clusterId[i].size();j++) clusterCount[clusterId[i][j]]=i;
+	for(int i=0;i<cluster.size();i++) {
+		for(int j=0;j<cluster[i].size();j++) clusterCount[sorted_items[cluster[i][j]].second]=i;
 	}
 
 	ofstream myfile;
@@ -233,12 +234,15 @@ void wrapper(vector<item> items, Coordinate warehouse, int numberOfRiders, Bin b
 vector<vector<int> > createResult() {
 	vector<vector<int> > clusterId;
 	for(int j=0; j<nW; j++){
+		// cout<<"Printing of Worker"<<j<<": "<<endl;
 		double sf = 0, mf = 0, st = 0, mt = 0, tmp;
 		vector<int> &S = workers[j].S;
 		int _pid = workers[j].oid, pid;
+		// cout<<V[workers[j].oid].longitude<<" "<<V[workers[j].oid].latitude<<" Start"<<endl;
 		vector<int> tempCluster;
 		for(int i=1; i<S.size(); ++i){
 			pid = (S[i]&1) ? requests[S[i]>>1].did : requests[S[i]>>1].oid;
+			// cout<<V[pid].longitude<<" "<<V[pid].latitude<<" "<<((S[i]&1)?"Delivery":"Packing")<<endl;
 			tmp = localDist(_pid, pid);
 			mt += tmp;
 			if (S[i] & 1) {	

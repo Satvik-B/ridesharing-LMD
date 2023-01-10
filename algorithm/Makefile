@@ -21,7 +21,7 @@ utils.o: utils.h utils.cpp HST.h HST.cpp HST.o global.h global.cpp global.o
 chst: constructHSTs.cpp global.h global.cpp global.o HST.h HST.cpp HST.o
 	$(CXX) $(CFLAGS) -o chst global.o HST.o constructHSTs.cpp $(LIBS) $(MEM)
 
-fesif: fesif.cpp utils.h utils.cpp utils.o HST.h HST.cpp HST.o global.h global.cpp global.o
+fesif: fesif.cpp utils.h utils.cpp utils.o HST.h HST.cpp HST.o global.h global.cpp global.o fesif.h
 	$(CXX) $(CFLAGS) -o fesif utils.o global.o HST.o fesif.cpp $(LIBS) $(MEM)
 	
 .PHONY: clean

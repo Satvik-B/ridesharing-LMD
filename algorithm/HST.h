@@ -20,7 +20,7 @@ extern double* exp2s;
 extern double* sum2s;
 extern vector<int> pi;
 extern int* reverse_pi;
-extern int** far;
+extern vector<vector<int> > far;
 extern double dmax;
 extern double gama;
 

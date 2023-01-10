@@ -15,7 +15,7 @@ int nV = 0, H = 0;
 vector<Coordinate> V;
 vector<int> pi;
 int *reverse_pi = NULL;
-int **far = NULL;
+vector<vector<int> > far;
 double dmax = -1.0;
 double gama = -1.0;
 double *exp2s = NULL;
@@ -32,9 +32,9 @@ void initMemory(int n) {
 	pi.resize(nV);
 	pi_bk.resize(nV);
 	reverse_pi = new int[nV];
-	far = new int*[nV];
+	far.resize(nV);
 	for (int i=0; i<nV; ++i)
-		far[i] = new int[MAX_HEIGHT];
+		far[i].resize(MAX_HEIGHT);
 	exp2s = new double[MAX_HEIGHT];
 	exp2s[0] = 1.0;
 	for (int i=1; i<MAX_HEIGHT; ++i)
@@ -50,9 +50,9 @@ void freeMemory() {
 	// delete[] V;
 	// delete[] pi;
 	delete[] reverse_pi;
-	for (int i=0; i<nV; ++i)
-		delete[] far[i];
-	delete[] far;
+	// for (int i=0; i<nV; ++i)
+	// 	delete[] far[i];
+	// delete[] far;
 	delete[] exp2s;
 	delete[] sum2s;
 }
@@ -81,7 +81,8 @@ void calcDmax() {
 	dmax = 0.0;
 	for (int i=0; i<nV; i++) {
 		for (int j=i+1; j<nV; j++) {
-			dmax = max(dmax, dist(V, i, j));
+			double dist1 = dist(V, i, j);
+			dmax = max(dmax, dist1);
 			#ifdef LOCAL_DEBUG
 			printf("dist(%d,%d) = %.2lf\n", i, j, dist(V, i, j));
 			#endif
@@ -262,4 +263,10 @@ void constructHST(bool load) {
 		preC = curC;
 		curC.clear();
 	}
+	// for(int i=0;i<nV;i++) {
+	// 	for(int j=0;j<=H;j++) {
+	// 		cout<<far[i][j]<<" ";
+	// 	}
+	// 	cout<<endl;
+	// }
 }

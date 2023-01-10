@@ -387,7 +387,7 @@ void insertDist(worker_t& w, int rid, int& oPos, int& dPos, double& inc) {
 	inc = INF, oPos = dPos = -1;
 	
 	for (int i=0; i<S.size(); ++i) { 
-		if (picked[i]+r.wei > w.cap.capacity || pickedVolume[i]+r.volume > w.cap.getVolume() || pickedCount[i]+1 > 24)
+		if (picked[i]+r.wei > w.cap.capacity || pickedVolume[i]+r.volume > w.cap.getVolume() || pickedCount[i]+1 > 25)
 			continue;
 		
 		if (i == S.size()-1) {
@@ -412,7 +412,7 @@ void insertDist(worker_t& w, int rid, int& oPos, int& dPos, double& inc) {
 	vector<int> Plc;
 
 	for (int j=0; j<S.size(); ++j) {
-		if (picked[j]+r.wei > w.cap.capacity || pickedVolume[j]+r.volume > w.cap.getVolume() || pickedCount[j]+1 > 24) {
+		if (picked[j]+r.wei > w.cap.capacity || pickedVolume[j]+r.volume > w.cap.getVolume() || pickedCount[j]+1 > 25) {
 			Dio.push_back(INF);
 			Plc.push_back(-1);
 			continue;
